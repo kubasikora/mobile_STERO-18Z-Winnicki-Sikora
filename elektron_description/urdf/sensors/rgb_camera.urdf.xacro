@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<robot name="elektron_rgb_camera" xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:include filename="$(find elektron_description)/urdf/elektron_gazebo.urdf.xacro"/>
+
+  <xacro:macro name="elektron_rgb_camera" params="parent id">
+    <joint name="camera_joint_${id}" type="fixed">
+      <origin xyz="0.0 0.0 0" rpy="0 0 0"/>
+      <parent link="${parent}"/>
+      <child link="camera_link_${id}"/>
+    </joint>  
+      <link name="camera_link_${id}">
+      <visual>
+       <origin xyz="0 0 0" rpy="0 0 ${M_PI/2}"/>
+        <geometry>
+         <mesh filename="package://elektron_description/meshes/sensors/head_camera/scaled_camera.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.07271 0.27794 0.073"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.564" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.003881243" ixy="0.0" ixz="0.0"
+                 iyy="0.000498940" iyz="0.0"
+                 izz="0.003879257" />
+      </inertial>
+    </link>
+        <joint name="camera_optical_joint_${id}" type="fixed">
+      <origin xyz="0.05 0.0 0.04" rpy="0 0 0"/>
+      <parent link="camera_link_${id}"/>
+      <child link="camera_optical_link_${id}"/>
+    </joint>  
+      <link name="camera_optical_link_${id}">
+        <inertial>
+        <mass value="0.01" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.003881243" ixy="0.0" ixz="0.0"
+                 iyy="0.000498940" iyz="0.0"
+                 izz="0.003879257" />
+      </inertial>
+    </link>
+      <elektron_sim_cam_head reference="camera_optical_link_${id}" id="${id}" frame="camera_optical_link_${id}"/>
+
+      </xacro:macro>
+</robot>

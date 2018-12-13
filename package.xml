@@ -2,7 +2,8 @@
 <name>stero_mobile_init</name>
 <version>1.2.4</version>
 <description>uzupelnic</description>
-<maintainer email="DO UZUPELNIENIA"> DO UZUPELNIENIA!!!! </maintainer>
+<maintainer email="283418@pw.edu.pl">Jakub Sikora</maintainer>
+<maintainer email="283423@pw.edu.pl">Konrad Winnicki</maintainer>
 <license>BSD</license>
   <buildtool_depend>catkin</buildtool_depend>
   <run_depend>elektron</run_depend>

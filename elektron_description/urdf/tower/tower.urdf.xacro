@@ -1,0 +1,194 @@
+<?xml version="1.0"?>
+<robot name="elektron_tower" xmlns:xacro="http://ros.org/wiki/xacro">
+<xacro:include filename="$(find elektron_description)/urdf/elektron_properties.urdf.xacro"/>
+<xacro:include filename="$(find elektron_description)/urdf/sensors/rgb_camera.urdf.xacro"/>
+<xacro:include filename="$(find elektron_description)/urdf/sensors/kinect.urdf.xacro"/>
+
+  <xacro:macro name="elektron_tower" params="parent camera_type id">
+
+  <joint name="high_kinect_base_joint_${id}" type="fixed">
+      <origin xyz="${high_kinect_base_px} ${high_kinect_base_py} ${high_kinect_base_pz}" rpy="${high_kinect_base_or} ${high_kinect_base_op} ${high_kinect_base_oy}"/>
+      <parent link="${parent}"/>
+      <child link="high_kinect_base_${id}" />
+    </joint>
+    <link name="high_kinect_base_${id}">
+    	    	 <inertial>
+		     <origin xyz="0 0 0" rpy="0 0 0"/>
+		     <mass value="0.1"/>
+		     <inertia ixx="1"  ixy="0"  ixz="0" iyy="1" iyz="0" izz="1" />
+   		</inertial>
+	</link>
+
+<sensor_kinect parent="high_kinect_base_${id}" id="tower_top"/>
+
+
+   <joint name="head_base_joint_${id}" type="fixed">
+      <origin xyz="${head_base_px} ${head_base_py} ${head_base_pz}" rpy="${head_base_or} ${head_base_op} ${head_base_oy}"/>
+      <parent link="${parent}"/>
+      <child link="head_base" />
+    </joint>
+    <link name="head_base">
+    	    	 <inertial>
+		     <origin xyz="0 0 0" rpy="0 0 0"/>
+		     <mass value="0.1"/>
+
+		     <inertia ixx="1"  ixy="0"  ixz="0" iyy="1" iyz="0" izz="1" />
+   		</inertial>
+      	<visual>
+	       <origin xyz="0 0 0" rpy="0 0 ${M_PI/2}"/>
+		<geometry>
+		 <mesh filename="package://elektron_description/meshes/base/tower.dae"/>
+		</geometry>
+      </visual>
+	</link>
+
+    <joint name="head_yaw_fixed_joint_${id}" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="head_base" />
+      <child link="head_bottom_fixed_link_${id}" />
+    </joint>
+    <link name="head_bottom_fixed_link_${id}">
+      <inertial>
+         <origin xyz="0 0 0" rpy="0 0 0"/>
+         <mass value="0.1"/>
+         <inertia ixx="1"  ixy="0"  ixz="0" iyy="1" iyz="0" izz="1" />
+      </inertial>
+  </link>
+    <joint name="head_yaw_revolute_joint_${id}" type="revolute">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+     <!-- --> <axis xyz="0 0 1"/>
+      <limit effort="1000.0" lower="-${M_PI/2}" upper="${M_PI/2}" velocity="0.5"/>
+      <parent link="head_bottom_fixed_link_${id}" />
+      <child link="head_bottom_revolute_link_${id}" />
+    </joint>
+    <link name="head_bottom_revolute_link_${id}">
+    	 <inertial>
+		     <origin xyz="0 0 0" rpy="0 0 0"/>
+		     <mass value="0.1"/>
+		     <inertia ixx="1"  ixy="0"  ixz="0" iyy="0" iyz="0" izz="1" />
+   		</inertial>
+	</link>
+
+    <joint name="head_pitch_setting_joint_${id}" type="fixed">
+      <origin xyz="0 0 0.05" rpy="0 0 0" />
+      <parent link="head_base" />
+      <child link="head_pitch_setting_link_${id}" />
+    </joint>
+    <link name="head_pitch_setting_link_${id}">
+      <inertial>
+         <origin xyz="0 0 0" rpy="0 0 0"/>
+         <mass value="0.1"/>
+         <inertia ixx="1"  ixy="0"  ixz="0" iyy="1" iyz="0" izz="1" />
+      </inertial>
+  </link>
+
+    <joint name="head_pitch_fixed_joint_${id}" type="fixed">
+      <origin xyz="0 0 0.05" rpy="0 0 0" />
+      <parent link="head_bottom_revolute_link_${id}" />
+      <child link="head_upper_fixed_link_${id}" />
+    </joint>
+    <link name="head_upper_fixed_link_${id}">
+      <inertial>
+         <origin xyz="0 0 0" rpy="0 0 0"/>
+         <mass value="0.1"/>
+         <inertia ixx="1"  ixy="0"  ixz="0" iyy="1" iyz="0" izz="1" />
+      </inertial>
+  </link>
+
+    <joint name="head_pitch_revolute_joint_${id}" type="revolute">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <axis xyz="0 1 0"/>
+      <limit effort="1000.0" lower="-${M_PI/2}" upper="${M_PI/2}" velocity="0.5"/>
+      <parent link="head_upper_fixed_link_${id}" />
+      <child link="head_upper_revolute_link_${id}" />
+    </joint>
+    <link name="head_upper_revolute_link_${id}">
+    	<inertial>
+		     <origin xyz="0 0 0" rpy="0 0 0"/>
+		     <mass value="0.1"/>
+		     <inertia ixx="1"  ixy="0"  ixz="0" iyy="1" iyz="0" izz="1" />
+   		</inertial>
+	</link>
+
+    <joint name="head_end_${id}" type="fixed">
+      <origin xyz="0.05 0 0.05" rpy="0 0 0" />
+      <parent link="head_upper_revolute_link_${id}" />
+      <child link="head_end_link_${id}" />
+    </joint>
+    <link name="head_end_link_${id}">
+      <inertial>
+         <origin xyz="0 0 0" rpy="0 0 0"/>
+         <mass value="0.1"/>
+         <inertia ixx="1"  ixy="0"  ixz="0" iyy="1" iyz="0" izz="1" />
+      </inertial>
+  </link>
+
+
+
+	<xacro:if value="${camera_type}">
+		<sensor_kinect parent="head_end_link_${id}" id="head"/>
+   <joint name="camera_rgb_${id}" type="fixed">
+      <origin xyz="0.0 0.0 0.0" rpy="0 -${M_PI/2} ${M_PI/2}"/>
+      <parent link="kinect_camera_rgb_optical_frame_head"/>
+      <child link="rgb_head_${id}"/>
+    </joint>  
+      <link name="rgb_head_${id}">
+        <inertial>
+        <mass value="0.0001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.003881243" ixy="0.0" ixz="0.0"
+                 iyy="0.000498940" iyz="0.0"
+                 izz="0.003879257" />
+      </inertial>
+    </link>
+	</xacro:if>
+
+	<xacro:unless value="${camera_type}">
+		<elektron_rgb_camera parent="head_end_link_${id}" id="head"/>
+
+    <joint name="camera_rgb_${id}" type="fixed">
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+      <parent link="camera_optical_link_head"/>
+      <child link="rgb_head_${id}"/>
+    </joint>  
+      <link name="rgb_head_${id}">
+        <inertial>
+        <mass value="0.0001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.003881243" ixy="0.0" ixz="0.0"
+                 iyy="0.000498940" iyz="0.0"
+                 izz="0.003879257" />
+      </inertial>
+    </link> 
+	</xacro:unless>
+
+ <!--   <joint name="head_camera_joint" type="fixed">
+      <origin xyz="-0.05 0.0 0.05" rpy="0 0 0"/>
+      <parent link="head_upper_link"/>
+      <child link="head_camera_link"/>
+    </joint>  
+      <link name="head_camera_link">
+      <visual>
+       <origin xyz="0 0 0" rpy="0 0 ${M_PI/2}"/>
+        <geometry>
+         <mesh filename="package://elektron_description/meshes/sensors/head_camera/head_camera.dae"/>
+        </geometry>
+      </visual>
+  	  <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+  	    <geometry>
+  	      <box size="0.07271 0.27794 0.073"/>
+  	    </geometry>
+  	  </collision>
+      <inertial>
+        <mass value="0.564" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.003881243" ixy="0.0" ixz="0.0"
+                 iyy="0.000498940" iyz="0.0"
+                 izz="0.003879257" />
+      </inertial>
+    </link> -->
+
+  </xacro:macro>
+
+</robot>
