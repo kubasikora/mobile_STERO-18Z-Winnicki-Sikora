@@ -15,12 +15,26 @@ __CCW__ = -1
 global pub
 global x_robot, y_robot, theta_robot
 
+def optimize_theta(theta):
+    if theta > math.pi:
+        theta = theta - 2*math.pi
+    if theta < -math.pi:
+        theta = theta + 2*math.pi     
+    return theta
+
+def normalize_theta(theta):
+    if theta > 2*math.pi:
+        theta = theta - 2*math.pi
+    if theta < -2*math.pi:
+        theta = theta + 2*math.pi 
+    return theta
+
 def pose_callback(pose):
     global x_robot, y_robot, theta_robot
     #pozycja aktualna robota
     print("act_pos: ({0}, {1}); theta: {2};".format(x_robot, y_robot, theta_robot))
     #pozycja zadan robota bez kata
-    print("stpt: ({0}, {1})".format(pose.x, pose.y))
+    print("stpt: ({0}, {1}, {2})".format(pose.x, pose.y, pose.theta))
     #zmiana pozycji
     dx = pose.x - x_robot
     dy = pose.y - y_robot
@@ -30,19 +44,33 @@ def pose_callback(pose):
     dist = math.sqrt(dy**2 + dx**2)
     # ograniczenie na minimalne przemieszczenie
     if dist<0.05:
-        print("dist {0} is too close - aborting move;".format(dist))
-    # nowa pozycja robota
-    x_robot = x_robot + dx
-    y_robot = y_robot + dy
-    #kat obrotu robota przed optymalizacja ( przykladowo 2.5pi --> -0.5pi)
-    theta_spin = theta_st1 - theta_robot
-    print("theta_spin {0}".format(theta_spin))    
+        print("dist {0}, tylko obrot do zadanego theta".format(dist))
+    else:
+        # nowa pozycja robota
+        x_robot = x_robot + dx
+        y_robot = y_robot + dy
+        #kat obrotu robota przed optymalizacja ( przykladowo 2.5pi --> -0.5pi)
+        theta_spin = theta_st1 - theta_robot
+        print("theta_spin {0}".format(theta_spin))    
+        # optymalizacja kata obrotu
+        theta_spin = optimize_theta(theta_spin)  
+        print("theta_spin optimized {0}".format(theta_spin))
+        # obrot w odpowiednim kierunku
+        if theta_spin < 0:
+            spin_elektron(-theta_spin, __CCW__)
+        else:
+            spin_elektron(theta_spin, __CW__)
+        # wyznaczenie, ograniczenie i zapamietanie absolutnego kata obrotu robota
+        theta_robot = theta_robot + theta_spin
+        theta_robot = normalize_theta(theta_robot)
+        # poruszenie robotem do zadanego punktu
+        #dist = math.sqrt(dy**2 + dx**2)
+        move_elektron(pub, dist)
+
+    # obrot do zadanego theta
+    theta_spin = pose.theta - theta_robot
     # optymalizacja kata obrotu
-    if theta_spin > math.pi:
-        theta_spin = theta_spin - 2*math.pi
-    if theta_spin < -math.pi:
-        theta_spin = theta_spin + 2*math.pi    
-    print("theta_spin optimized {0}".format(theta_spin))
+    theta_spin = optimize_theta(theta_spin) 
     # obrot w odpowiednim kierunku
     if theta_spin < 0:
         spin_elektron(-theta_spin, __CCW__)
@@ -50,14 +78,9 @@ def pose_callback(pose):
         spin_elektron(theta_spin, __CW__)
     # wyznaczenie, ograniczenie i zapamietanie absolutnego kata obrotu robota
     theta_robot = theta_robot + theta_spin
-    if theta_robot > 2*math.pi:
-        theta_robot = theta_spin - 2*math.pi
-    if theta_robot < -2*math.pi:
-        theta_robot = theta_spin + 2*math.pi
-    # poruszenie robotem do zadanego punktu
-    #dist = math.sqrt(dy**2 + dx**2)
-    move_elektron(pub, dist)
-    print("act_pos: ({0}, {1})".format(x_robot, y_robot))
+    theta_robot = normalize_theta(theta_robot)
+
+    print("act_pos: ({0}, {1}); theta: {2}".format(x_robot, y_robot, theta_robot))
     print("--------------------------------------------------")
 
 def spin_elektron(angle, direction):
