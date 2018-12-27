@@ -81,6 +81,7 @@ def pose_callback(pose):
     theta_robot = normalize_theta(theta_robot)
 
     print("act_pos: ({0}, {1}); theta: {2}".format(x_robot, y_robot, theta_robot))
+    print("pos_err: {0:.3f}; theta_err: {1:.3f}".format(math.sqrt( (pose.x-x_robot)**2 + (pose.y-y_robot)**2 ), math.fabs(pose.theta-theta_robot)))
     print("--------------------------------------------------")
 
 def spin_elektron(angle, direction):
