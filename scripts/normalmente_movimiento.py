@@ -13,34 +13,52 @@ __CCW__ = -1
 
 
 global pub
-global x_robot
-global y_robot, theta_final
+global x_robot, y_robot, theta_robot
 
 def pose_callback(pose):
-    global x_robot, y_robot, theta_final
-    print("act_pos: ({0}, {1})".format(x_robot, y_robot))
+    global x_robot, y_robot, theta_robot
+    #pozycja aktualna robota
+    print("act_pos: ({0}, {1}); theta: {2};".format(x_robot, y_robot, theta_robot))
+    #pozycja zadan robota bez kata
     print("stpt: ({0}, {1})".format(pose.x, pose.y))
-    x = pose.x - x_robot
-    y = pose.y - y_robot
-    x_robot = x_robot + x
-    y_robot = y_robot + y
-    print("dr: ({0}, {1})".format(x, y))
-    theta_st1 = math.atan2(y,x) 
-    print(theta_st1)
-    
-    theta_spin = theta_st1 - theta_final
-    # wyznacz odpowiedni kat i obroc sie w odpowiedni sposob
-    if theta_spin > math.pi/2:
+    #zmiana pozycji
+    dx = pose.x - x_robot
+    dy = pose.y - y_robot
+    #zmiana kata wynikajajaca ze zmiany pozycji
+    theta_st1 = math.atan2(dy,dx) 
+    print("(dx, dy, dtheta): ({0}, {1}, {2})".format(dx, dy, theta_st1))
+    dist = math.sqrt(dy**2 + dx**2)
+    # ograniczenie na minimalne przemieszczenie
+    if dist<0.05:
+        print("dist {0} is too close - aborting move;".format(dist))
+    # nowa pozycja robota
+    x_robot = x_robot + dx
+    y_robot = y_robot + dy
+    #kat obrotu robota przed optymalizacja ( przykladowo 2.5pi --> -0.5pi)
+    theta_spin = theta_st1 - theta_robot
+    print("theta_spin {0}".format(theta_spin))    
+    # optymalizacja kata obrotu
+    if theta_spin > math.pi:
         theta_spin = theta_spin - 2*math.pi
-    
+    if theta_spin < -math.pi:
+        theta_spin = theta_spin + 2*math.pi    
+    print("theta_spin optimized {0}".format(theta_spin))
+    # obrot w odpowiednim kierunku
     if theta_spin < 0:
         spin_elektron(-theta_spin, __CCW__)
     else:
         spin_elektron(theta_spin, __CW__)
-        
-    dist = math.sqrt(y**2 + x**2)
+    # wyznaczenie, ograniczenie i zapamietanie absolutnego kata obrotu robota
+    theta_robot = theta_robot + theta_spin
+    if theta_robot > 2*math.pi:
+        theta_robot = theta_spin - 2*math.pi
+    if theta_robot < -2*math.pi:
+        theta_robot = theta_spin + 2*math.pi
+    # poruszenie robotem do zadanego punktu
+    #dist = math.sqrt(dy**2 + dx**2)
     move_elektron(pub, dist)
     print("act_pos: ({0}, {1})".format(x_robot, y_robot))
+    print("--------------------------------------------------")
 
 def spin_elektron(angle, direction):
     print("spinning")
@@ -51,25 +69,16 @@ def spin_elektron(angle, direction):
     msg.linear.x = 0.0
     msg.linear.y = 0.0
     msg.linear.z = 0.0
+    msg.angular.x = 0.0
     msg.angular.y = 0.0
-    msg.angular.z = 0.0
-    while __spin_vel__*dt < angle:
+    while __spin_vel__*dt < math.fabs(angle):
         dt = rospy.get_time() - t
         msg.angular.z = __spin_vel__*direction
         pub.publish(msg)
-        #print(dt)
-        #print(msg)	
         rospy.sleep(0.1)
-        	
-    msg_final = Twist()
-    msg_final.linear.x = 0.0
-    msg_final.linear.y = 0.0
-    msg_final.linear.z = 0.0
-    msg_final.angular.x = 0.0
-    msg_final.angular.y = 0.0
-    msg_final.angular.z = 0.0
-    pub.publish(msg_final)
-    print(msg_final)
+       	    
+    msg.angular.z = 0.0
+    pub.publish(msg)
     print("finshed spinning")
     
 def move_elektron(pub, distance):
@@ -87,30 +96,20 @@ def move_elektron(pub, distance):
     while __linear_vel__*dt < distance:
         dt = rospy.get_time() - t
         msg.linear.x = __linear_vel__
-        #msg.linear.y = __linear_vel__
         pub.publish(msg)
-        #print(dt)
-        #print(msg)	
-        rospy.sleep(0.1)
-        	
-    msg_final = Twist()
-    msg_final.linear.x = 0.0
-    msg_final.linear.y = 0.0
-    msg_final.linear.z = 0.0
-    msg_final.angular.x = 0.0
-    msg_final.angular.y = 0.0
-    msg_final.angular.z = 0.0
-    pub.publish(msg_final)
-    print(msg_final)
+        rospy.sleep(0.05)
+        
+    msg.linear.x = 0.0
+    pub.publish(msg)
     print("finished moving")
 
 if __name__ == "__main__":
-    theta_final = 0.0
+    theta_robot = 0.0
     x_robot = 0.0
     y_robot = 0.0
     rospy.init_node('normalmente_movimiento', anonymous=False)
     rospy.Subscriber("new_pose", Pose, pose_callback)
     #rospy.Subscriber("elektron/mobile_base_controller/odom", Pose, callback)
     pub = rospy.Publisher('mux_vel_nav/cmd_vel', Twist, queue_size = 1)
-    
+    print("Al desarrollador de Python le gusta Coca-Cola.")
     rospy.spin()
