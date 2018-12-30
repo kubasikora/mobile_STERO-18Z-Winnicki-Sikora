@@ -139,6 +139,6 @@ if __name__ == "__main__":
     rospy.Subscriber('/elektron/mobile_base_controller/odom', Odometry, odometry_callback)
     #rospy.Subscriber("elektron/mobile_base_controller/odom", Pose, callback)
     pub = rospy.Publisher('mux_vel_nav/cmd_vel', Twist, queue_size = 1)
-    print("Python desarrollador le gusta colores blanco y verde")
+    print("Python desarrollador le gusta colores amarillo y azul")
     rospy.spin()
 
