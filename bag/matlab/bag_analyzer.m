@@ -1,4 +1,4 @@
-bag = rosbag('../test.bag');
+bag = rosbag('../no_odom.bag');
 
 
 %% acquire odom data
