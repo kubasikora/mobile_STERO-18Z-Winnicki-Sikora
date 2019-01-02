@@ -72,10 +72,11 @@ def do_line(pub):
     pos_err = math.sqrt( (stpt_x-x_robot)**2 + (stpt_y-y_robot)**2 )    
     while (0.001 < pos_err) & (pos_err<=prev_pos_err):        
         rospy.sleep(0.05)
+        pub.publish(start_msg)
         prev_pos_err = pos_err
         pos_err = math.sqrt( (stpt_x-x_robot)**2 + (stpt_y-y_robot)**2 )
         robot_pos_pub.publish(pose_factory(x_robot, y_robot, theta_robot))
-        print(pose_factory(x_robot, y_robot, theta_robot))
+        
 
     msg = twist_factory()
     pub.publish(msg)
@@ -110,6 +111,7 @@ def do_circle():
     pub.publish(start_msg)
     print("Elektron started")
     while 0.005 < math.fabs(stpt-theta_robot):
+        pub.publish(start_msg)
         rospy.sleep(0.05)
 
     print("Stopping elektron")
