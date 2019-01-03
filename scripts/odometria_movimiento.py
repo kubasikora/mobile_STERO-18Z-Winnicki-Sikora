@@ -84,7 +84,7 @@ def pose_callback(pose):
 def spin_elektron_odom(stpt, direction):
     global theta_robot
     print("spinning with odom")
-    __spin_vel__ = 0.2
+    __spin_vel__ = 0.1
     t = rospy.get_time()
     dt = 0
     msg = Twist()
@@ -95,9 +95,12 @@ def spin_elektron_odom(stpt, direction):
     msg.angular.y = 0.0
     msg.angular.z = __spin_vel__*direction
     #poczatek obrotu
-    pub.publish(msg)
+    
     #ciagle porownywanie z odometria
-    while 0.005 < math.fabs(stpt-theta_robot):
+    print(theta_robot)
+    while 0.01 < math.fabs(stpt-theta_robot):
+        print(math.fabs(stpt-theta_robot))
+        pub.publish(msg)
         rospy.sleep(0.05)
     # koniec obrotu
     msg.angular.z = 0.0
