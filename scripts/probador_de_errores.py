@@ -140,17 +140,17 @@ def do_line():
     print("Velocity: {0}".format(__linear_vel__))
     print("Moving...")
 
-    __sim_time__ = 10
+    __sim_time__ = 6
     move_msg = twist_factory(x = __linear_vel__)
     t = rospy.get_time()
     while (rospy.get_time() - t < __sim_time__):
         robot_vel_pub.publish(move_msg) # make elektron move
         robot_pos_pub.publish(pose_factory(x_robot, y_robot, theta_robot)) # publish own position
-        robot_odom_err_pub.publish(pose_factory(x_gazebo - x_robot, y_gazebo - y_robot, theta_gazebo - theta_robot)) #publish odom error
-        robot_laser_err_pub.publish(pose_factory(x_gazebo - x_laser, y_gazebo - y_laser, theta_gazebo - theta_laser)) #publish laser error
-
-    robot_odom_err_pub.publish(pose_factory(x_gazebo - x_robot, y_gazebo - y_robot, theta_gazebo - theta_robot)) #publish odom error
-    robot_laser_err_pub.publish(pose_factory(x_gazebo - x_laser, y_gazebo - y_laser, theta_gazebo - theta_laser)) #publish laser error
+        robot_odom_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_robot), math.fabs(y_gazebo - y_robot), math.fabs(theta_gazebo - theta_robot))) #publish odom error
+        robot_laser_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_laser), math.fabs(y_gazebo - y_laser), math.fabs(theta_gazebo - theta_laser))) #publish laser error
+    
+    robot_odom_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_robot), math.fabs(y_gazebo - y_robot), math.fabs(theta_gazebo - theta_robot))) #publish odom error
+    robot_laser_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_laser), math.fabs(y_gazebo - y_laser), math.fabs(theta_gazebo - theta_laser))) #publish laser error
     stop_msg = twist_factory()
     robot_vel_pub.publish(stop_msg)
 
@@ -181,17 +181,18 @@ def do_circle():
     print("Velocity: {0}".format(__angular_vel__))
     print("Moving...")
 
-    __sim_time__ = 5
+    __sim_time__ = 10
     move_msg = twist_factory(ang_z = __angular_vel__)
+    robot_vel_pub.publish(move_msg) # make elektron move
     t = rospy.get_time()
     while (rospy.get_time() - t < __sim_time__):
         robot_vel_pub.publish(move_msg) # make elektron move
         robot_pos_pub.publish(pose_factory(x_robot, y_robot, theta_robot)) # publish own position
-        robot_odom_err_pub.publish(pose_factory(x_gazebo - x_robot, y_gazebo - y_robot, theta_gazebo - theta_robot)) #publish odom error
-        robot_laser_err_pub.publish(pose_factory(x_gazebo - x_laser, y_gazebo - y_laser, theta_gazebo - theta_laser)) #publish laser error
-
-    robot_odom_err_pub.publish(pose_factory(x_gazebo - x_robot, y_gazebo - y_robot, theta_gazebo - theta_robot)) #publish odom error
-    robot_laser_err_pub.publish(pose_factory(x_gazebo - x_laser, y_gazebo - y_laser, theta_gazebo - theta_laser)) #publish laser error
+        robot_odom_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_robot), math.fabs(y_gazebo - y_robot), math.fabs(theta_gazebo - theta_robot))) #publish odom error
+        robot_laser_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_laser), math.fabs(y_gazebo - y_laser), math.fabs(theta_gazebo - theta_laser))) #publish laser error
+    
+    robot_odom_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_robot), math.fabs(y_gazebo - y_robot), math.fabs(theta_gazebo - theta_robot))) #publish odom error
+    robot_laser_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_laser), math.fabs(y_gazebo - y_laser), math.fabs(theta_gazebo - theta_laser))) #publish laser error
     stop_msg = twist_factory()
     robot_vel_pub.publish(stop_msg)
 
@@ -207,7 +208,7 @@ def do_square():
     print("La universidad no es solo un juego de minecraft.")
 
     __linear_vel__ = 0.1
-    __angular_vel__ = 0.05
+    __angular_vel__ = 0.2
 
     robot_vel_pub = rospy.Publisher('mux_vel_nav/cmd_vel', Twist, queue_size = 1)
     robot_pos_pub = rospy.Publisher('/stero/position', Pose, queue_size = 10)
@@ -226,7 +227,7 @@ def do_square():
         print("Velocity: {0}".format(__angular_vel__))
         print("Spinning...")
 
-        __sim_time__ = 0.168*math.pi / __angular_vel__
+        __sim_time__ = 0.5*math.pi / __angular_vel__
         print("Spin time: {0}".format(__sim_time__))
         move_msg = twist_factory(ang_z = __angular_vel__)
         t = rospy.get_time()
@@ -235,11 +236,11 @@ def do_square():
             rospy.sleep(0.05)
             robot_vel_pub.publish(move_msg) # make elektron move
             robot_pos_pub.publish(pose_factory(x_robot, y_robot, theta_robot)) # publish own position
-            robot_odom_err_pub.publish(pose_factory(x_gazebo - x_robot, y_gazebo - y_robot, theta_gazebo - theta_robot)) #publish odom error
-            robot_laser_err_pub.publish(pose_factory(x_gazebo - x_laser, y_gazebo - y_laser, theta_gazebo - theta_laser)) #publish laser error
-
-        robot_odom_err_pub.publish(pose_factory(x_gazebo - x_robot, y_gazebo - y_robot, theta_gazebo - theta_robot)) #publish odom error
-        robot_laser_err_pub.publish(pose_factory(x_gazebo - x_laser, y_gazebo - y_laser, theta_gazebo - theta_laser)) #publish laser error
+            robot_odom_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_robot), math.fabs(y_gazebo - y_robot), math.fabs(theta_gazebo - theta_robot))) #publish odom error
+            robot_laser_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_laser), math.fabs(y_gazebo - y_laser), math.fabs(theta_gazebo - theta_laser))) #publish laser error
+    
+        robot_odom_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_robot), math.fabs(y_gazebo - y_robot), math.fabs(theta_gazebo - theta_robot))) #publish odom error
+        robot_laser_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_laser), math.fabs(y_gazebo - y_laser), math.fabs(theta_gazebo - theta_laser))) #publish laser error
         stop_msg = twist_factory()
         robot_vel_pub.publish(stop_msg)
         print("Finished spinning")
@@ -251,7 +252,7 @@ def do_square():
 
         #move forward
         print("Moving forward...")
-        __sim_time__ = 0.6  / __linear_vel__
+        __sim_time__ = 2  / __linear_vel__
         print("Move time: {0}".format(__sim_time__))
         move_msg = twist_factory(x = __linear_vel__)
         t = rospy.get_time()
@@ -260,11 +261,11 @@ def do_square():
             rospy.sleep(0.05)
             robot_vel_pub.publish(move_msg) # make elektron move
             robot_pos_pub.publish(pose_factory(x_robot, y_robot, theta_robot)) # publish own position
-            robot_odom_err_pub.publish(pose_factory(x_gazebo - x_robot, y_gazebo - y_robot, theta_gazebo - theta_robot)) #publish odom error
-            robot_laser_err_pub.publish(pose_factory(x_gazebo - x_laser, y_gazebo - y_laser, theta_gazebo - theta_laser)) #publish laser error
-
-        robot_odom_err_pub.publish(pose_factory(x_gazebo - x_robot, y_gazebo - y_robot, theta_gazebo - theta_robot)) #publish odom error
-        robot_laser_err_pub.publish(pose_factory(x_gazebo - x_laser, y_gazebo - y_laser, theta_gazebo - theta_laser)) #publish laser error
+            robot_odom_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_robot), math.fabs(y_gazebo - y_robot), math.fabs(theta_gazebo - theta_robot))) #publish odom error
+            robot_laser_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_laser), math.fabs(y_gazebo - y_laser), math.fabs(theta_gazebo - theta_laser))) #publish laser error
+    
+        robot_odom_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_robot), math.fabs(y_gazebo - y_robot), math.fabs(theta_gazebo - theta_robot))) #publish odom error
+        robot_laser_err_pub.publish(pose_factory(math.fabs(x_gazebo - x_laser), math.fabs(y_gazebo - y_laser), math.fabs(theta_gazebo - theta_laser))) #publish laser error
         stop_msg = twist_factory()
         robot_vel_pub.publish(stop_msg)
 
