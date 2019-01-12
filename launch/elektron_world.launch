@@ -9,6 +9,7 @@
 <arg name="gmapping" default="false"/> <!-- include slam mapping to simulation <<gmapping ROS package>> --> 
 <!-- <env name="LIBGL_ALWAYS_SOFTWARE" value="1"/>  --> 
 
+
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(arg elektron_world_file)"/> <!---->
 <arg name="gui" value="$(arg gui)" />
@@ -44,4 +45,7 @@
 		<remap from="/yocs_cmd_vel_mux/mux_vel_raw/cmd_vel" to="/mux_vel_raw/cmd_vel"/>
 		<remap from="/cmd_vel_absolute" to="/elektron/mobile_base_controller/cmd_vel"/>
 	</node>
+
+  <node name="stero_tf_publisher" pkg="tf" type="static_transform_publisher"  args="0 0 0 0 0 0 map odom 10"/>
+
 </launch>
