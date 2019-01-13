@@ -8,7 +8,7 @@ import math
 from geometry_msgs.msg import PoseStamped, Twist
 from turtlesim.msg import Pose
 from nav_msgs.msg import Odometry
-
+from stero_mobile_init.srv import STPT
 __CW__ = 1
 __CCW__ = -1
 
@@ -37,7 +37,11 @@ def odometry_callback(odom):
     x_robot = odom.pose.pose.position.x
     y_robot = odom.pose.pose.position.y
     #print("odom act_pos: ({0}, {1}); theta: {2};".format(x_robot, y_robot, theta_robot))    
-	
+
+def stpt_service(stpt):
+    pose_callback(stpt.pose)
+    return 0
+
 def pose_callback(pose):
     global x_robot, y_robot, theta_robot
     #pozycja aktualna robota
@@ -99,7 +103,7 @@ def spin_elektron_odom(stpt, direction):
     #ciagle porownywanie z odometria
     print(theta_robot)
     while 0.01 < math.fabs(stpt-theta_robot):
-        print(math.fabs(stpt-theta_robot))
+        #print(math.fabs(stpt-theta_robot))
         pub.publish(msg)
         rospy.sleep(0.05)
     # koniec obrotu
@@ -137,8 +141,9 @@ if __name__ == "__main__":
     x_robot = 0
     y_robot = 0
     theta_robot = 0
-    rospy.init_node('normalmente_movimiento', anonymous=False)
+    rospy.init_node('odometria_movimiento', anonymous=False)
     rospy.Subscriber("new_pose", Pose, pose_callback)
+    srv = rospy.Service('stero/go_to_stpt', STPT, stpt_service)
     rospy.Subscriber('/elektron/mobile_base_controller/odom', Odometry, odometry_callback)
     #rospy.Subscriber("elektron/mobile_base_controller/odom", Pose, callback)
     pub = rospy.Publisher('mux_vel_nav/cmd_vel', Twist, queue_size = 1)
