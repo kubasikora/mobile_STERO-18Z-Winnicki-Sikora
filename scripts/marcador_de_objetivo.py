@@ -65,6 +65,7 @@ def create_goal(x,y):
     return goal
   
 def plan_goal(stpt):
+    __path_step__ = 30
     print("stpt received")
     
     make_plan = rospy.ServiceProxy('/global_planner/planner/make_plan', GetPlan)
@@ -78,16 +79,20 @@ def plan_goal(stpt):
     print("### GOAL ###")
     print(goal.pose.position)
     poses = make_plan(start, goal, 0.1).plan.poses
+    lenPoses = len(poses)
+    if lenPoses==0:
+        print( "Global planner did not found path. return -1")
+        return -1
     
-    print("planned path contains {0} points".format(len(poses)))
-    n=0
-    while n<len(poses):
+    print("planned path contains {0} points".format(lenPoses))
+    n=__path_step__
+    while n<lenPoses:
         print("stpt {0}: ".format(n))
         do_path_step(poses[n])
         n = n + 30
-    print("stpt {0}: ".format(len(poses)-1))
-    do_path_step(poses[len(poses)-1])
-
+    print("stpt {0}: ".format(lenPoses-1))
+    do_path_step(poses[lenPoses-1])
+    print("### FINISH ###")
 
 if __name__ == "__main__":
     rospy.init_node('marcador_de_objetivo', anonymous=False)
