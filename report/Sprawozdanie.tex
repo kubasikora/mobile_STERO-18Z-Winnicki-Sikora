@@ -78,12 +78,98 @@
 \chapter{Laboratorium 1}
 
 \section{Znalezione błędy w funkcjonowaniu systemu robota}
+W trakcie zajęć po wprowadzeniu przez prowadzącego kilku modyfikacji,
+system robota przestał działać poprawnie. Po zadaniu robotowi prędkości, 
+robot zatrzymywał się i ruszał w bardzo dziwny i niezrozumiały sposób.
+Naszym zadaniem było zlokalizować usterki za pomocą narzędzi
+systemu ROS. 
+
+\subsection{Wykorzystane narzędzia}
+Do zdiagnozowania usterki systemu wykorzystaliśmy następujące narzędzia.
+
+\subsubsection{\texttt{rqt\_{}graph}}
+Narzędzie \texttt{rqt\_{}graph} służy do wizualizacji struktury systemu. Pozwala na
+śledzenie topologii komunikacji pomiędzy poszczególnymi węzłami. Za pomocą tego narzędzia
+mogliśmy sprawdzić czy zaburzona została komunikacja pomiędzy węzłami oraz czy
+nie dodano nowego węzła wprowadzającego zaburzenia.
+
+\subsubsection{\texttt{rqt\_{}tf\_{}tree}}
+Narzędzie \texttt{rqt\_{}tf\_{}tree} pozwala na wizualizację drzewa transformacji 
+w systemie robota. Program pozwolił nam na sprawdzenie czy publikowane są wszystkie
+transformację w systemie, pozwalające na poprawne wykonywanie obliczeń w systemie.
+
+\subsubsection{\texttt{rostopic}}
+Program \texttt{rostopic} jest narzędziem do sprawdzenia informacji
+na temat ROS Topiców. Narzędzie to pozwala na wypisywanie wiadomości 
+nadawanych na zadanym kanale, znajdywania wszystkich topiców czy publikowanie
+nowych wiadomości.
+
+\subsubsection{\texttt{rqt\_{}plot}}
+Narzędzie \texttt{rqt\_{}plot} pozwala na wizualizację danych z wiadomości
+na kolorowych wykresach. Zwykle używane jako pierwsze narzędzie po które sięgamy 
+w trakcie pracy z systemem, to jednak w zadaniu lokalizacji usterki okazał się 
+bezużyteczny. 
+
+\subsection{Zlokalizowane usterki}
+Za pomocą \texttt{rqt\_{}tf\_{}tree} udało nam się ustalić że brakuje transformacji z
+układu bazy robota do układu wieży. Brak tego przekształcenia nie pozwalał chociażby
+na poprawną wizualizację robota w programie \texttt{rviz}. \\
+\\
+Znacznie poważniejszą usterką wprowadzoną przez prowadzącego było dołączenie do systemu
+nowego węzła nadającego na topic \texttt{mux\_{}vel\_{}nav/cmd\_{}vel}. Anonimowy węzeł 
+udało nam się zlokalizować za pomocą narzędzia \texttt{rqt\_{}graph}. Po podsłuchaniu 
+niechcianego gościa za pomocą polecenia \texttt{rostopic echo} udało nam się ustalić 
+że nowy węzeł nadaje zerowe prędkości. Wyjaśnia to zrywane ruchy robota, który najpierw
+otrzymywał niezerowe wartości prędkości aby następnie otrzymać polecenie zatrzymania się.
 
 \section{Opis algorytmu interpolacji liniowej}
+Głównym zadaniem do zrealizowania w trakcie laboratorium pierwszego było napisanie węzłów
+implementujących względne sterowanie pozycyjne. Należało zrealizować zadanie w dwóch
+wariantach. 
 
 \subsection{Interpolacja na podstawie zadawanych prędkości}
+W pierwszej wersji, interpolowaliśmy punkty wyłacznie za pomocą 
+zadawanych prędkości. Węzeł był inicjalizowany w punkcie (0,0,0) a kolejne sterowania
+miały być wyznaczane na podstawie domniemanej idealnie zrealizowanej poprzedniej akcji ruchu.\\
+\\
+\indent{} Zasada działania algorytmu wydaje się banalnie prosta. System sterowania robota cały 
+czas zapamiętuje pozycję między akcjami. Po przyjściu nowego polecenia, wyznaczane są 
+przemieszczenia o które należy przesunąć robota. Robot najpierw obraca się w stronę zadanego
+punktu, następnie jedzie do przodu aż do wyznaczonego miejsca aby ostatecznie obrócić się do 
+zadanego kąta obrotu. \\
+\\
+\indent{} Najciekawszym z punktu widzenia projektowania algorytmu lokomocji wydaje się sposób interpolacji położenia.
+Robot poruszając się do przodu zna odległość swoją od położenia zadanego oraz prędkość jaką zadaje
+na koła. Korzystając z prostego wzoru na drogę: $$ s = vt $$ możemy w prostu sposób wyznaczyć
+przez ile sekund należy jechać/obracać się aby osiągnąć cel. W ten sam sposób interpolowaliśmy
+pozycję kątową robota. Korzystając z zależności $$ \alpha = \omega t $$ udało nam się w prosty
+sposób uzyskać zadany kąt. Z podanego sposobu korzystamy na początku ruchu aby obrócić robota w
+stronę pozycji zadanej i na końcu ruchu aby obrócić robota do docelowego kąta zadanego. \\
+\\
+\indent{} Korzystająć z tej metody, udało nam się uzyskać wyniki
+które można opisać jako wysoko niezadowalające. Nawigacja robotem w ten sposób ma wiele wad.
+Jest bardzo niedokładna a błąd bardzo szybko narasta, co czyni wykonywanie złożonych zadań
+przemieszczania się niemożliwymi do wykonania. Jedyną zaletą tej metody, jest jej prostota.
+Można ją wykorzystać do zgrubnego przemieszczania się robota, w przypadku gdy podłoże 
+nie jest śliskie oraz nie jest dostępna informacja z enkoderów.\\
+\\
+\subsubsection{Implementacja}
+Zgodnie z przyjętą konwencją nazewniczą, węzeł wykonujący interpolację na podstawie 
+zadawanych prędkości nazwaliśmy \texttt{normalmente\_{}movimento.py}. Węzeł nasłuchuje 
+nowej pozycji zadanej na topicu \texttt{new\_{}pose}, który przyjmuje wiadomości
+typu \texttt{turtlesim/Pose}. Polecenie ruchu można wysłać używając przykładowego polecenia:
+
+\begin{center}
+    \texttt{rostopic pub /new\_{}pose turtlesim/Pose '{x: 2.0, y: 4.0, theta: 0}'}
+\end{center}
+
+po którym węzeł zacznie wysyłać wiadomości typu \texttt{geometry/Twist} na topic 
+\texttt{mux\_{}vel\_{}nav/cmd\_{}vel}.
+
+\newpage
 
 \subsection{Interpolacja na podstawie danych odometrii}
+
 
 
 \chapter{Projekt 1}
