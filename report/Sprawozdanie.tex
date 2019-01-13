@@ -155,7 +155,7 @@ nie jest śliskie oraz nie jest dostępna informacja z enkoderów.\\
 \\
 \subsubsection{Implementacja}
 Zgodnie z przyjętą konwencją nazewniczą, węzeł wykonujący interpolację na podstawie 
-zadawanych prędkości nazwaliśmy \texttt{normalmente\_{}movimento.py}. Węzeł nasłuchuje 
+zadawanych prędkości nazwaliśmy \texttt{normalmente\_{}movimiento.py}. Węzeł nasłuchuje 
 nowej pozycji zadanej na topicu \texttt{new\_{}pose}, który przyjmuje wiadomości
 typu \texttt{turtlesim/Pose}. Polecenie ruchu można wysłać używając przykładowego polecenia:
 
@@ -169,6 +169,52 @@ po którym węzeł zacznie wysyłać wiadomości typu \texttt{geometry/Twist} na
 \newpage
 
 \subsection{Interpolacja na podstawie danych odometrii}
+W drugiej wersji węzła, implementowaliśmy interpolację liniową punktów na podstawie 
+danych z odometrii. Informacja zwrotna na temat zrealizowanego położenia powinna 
+pozwolić na znaczącą poprawę dokładności przemieszczania robota.\\
+
+\indent{} Przed wyjaśnieniem zasady działania algorytmu, należy wyjaśnić czym dokładnie
+jest odometria. Najogólniej rzecz biorąć, odometria to dział miernictwa, który zajmuje się 
+pomiarem odległości, wykorzystującym czujniki które określają przemieszczenie względem pozycji 
+początkowej. \\
+\\
+\indent{} W przypadku systemu robotycznego Elektron, do dyspozycji mamy dwa rodzaje czujników.
+Pierwszym są enkodery umieszczone na kołach robota, które pozwalają na pomiar o ile obróciło się koło,
+co przy znanym promieniu powinno z pewną precyzją zwrócić nam przemieszczenie. Drugą możliwością, jest 
+zastosowanie czujnika laserowego do pomiaru przemieszczenia względem otoczenia.\\
+\\
+\indent{} Zasada działania algortymu nie jest specjalnie skomplikowana. Na początku obracamy robota,
+aż jego orientacja wynikająca z odometrii będzie zgodna (z zadaną dokładnością) z orientacją wymaganą do jazdy
+w kierunku zadanego punktu. Następnie robot jedzie prosto do momentu aż jego pozycja wynikająca
+z odometrii będzie zgodna z pozycją zadaną. Ostatecznie, ponownie obracamy robota do zadanej 
+orientacji w ten sam sposób w jaki to robiliśmy w pierwszej fazie ruchu.\\
+\\
+\indent{} Głównym czynnikiem wpływającym na jakość działania węzła jest jakość samego sygnału
+z odometrii. W przypadku kierowania się sygnałem pozycji pochodzącym z enkoderów umieszczonych 
+na kołach, który jest podatny na błędy z powodu poślizgów i skończonej rozdzielczości samego enkodera,
+możemy nie uzyskać dokładnego odwzorowania pozycji zadanej w rzeczywistą pozycję robota. 
+W celu poprawienia jakości sygnału z odometrii należy skorzystać z czujnika laserowego LIDAR, który 
+zwraca położenie na podstawie przemieszczenia względem otoczenia. 
+\subsubsection{Implementacja}
+W celu wykonania zadania napisaliśmy skrypt \texttt{odometria\_{}movimiento.py}, który uruchamia węzeł
+poruszający robotem z uwzględeniem informacji z odometrii. Podobnie jak w poprzednim zadaniu robot nasłuchuje
+nowej pozycji zadanej na temacie \texttt{new\_{}pose}. Dodatkowo, umożliwiliśmy zadawanie nowej pozycji jako 
+\texttt{rosservice}. Użytkownik wysyła żądanie przemieszczenia do usługi o nazwie \texttt{stero/go\_{}to\_{}stpt}.
+Aby poprawnie wywołać usługę, należy wysłać wiadomość zdefiniowanego przez nas typu \texttt{stero\_{}mobile\_{}init/STPT}.
+Węzeł odczytuje informacje z odometrii 
+z tematu \texttt{/elektron/mobile\_{}base\_{}controller/odom}. Wiadomości nadawane na tym temacie są typu \texttt{nav/Odometry}.\\
+\\
+\indent{} Po poprawnym zgłoszeniu żądania przemieszczenia, robot podobnie jak w przypadku poprzedniego węzła, 
+wykonuje trzystopniowe przemieszczenie się do pozycji zadanej:\\
+\begin{itemize}
+	\item Obrót w stronę pozycji zadanej
+	\item Ruch po prostej do punktu zadanego
+	\item Obrót do zadanej orientacji\\
+\end{itemize}
+
+Każda z faz jest wykonywana do momentu gdy pozycja z odometrii będzie zgodna z pozycją zadaną. Ponieważ pozycja jest 
+zwracana w pewnych odstępach, przemieszczenia i obroty wykonujemy do momentu aż różnica pozycji odometrii z pozycją
+zadaną będzie mniejsza od zadanego poziomu dokładności.
 
 
 
