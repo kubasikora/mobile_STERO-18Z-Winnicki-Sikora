@@ -1,0 +1,125 @@
+\documentclass{mwrep}
+
+% Polskie znaki
+\usepackage{polski}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{indentfirst}
+
+% Strona tytułowa
+\usepackage{pgfplots}
+\usepackage{siunitx}
+\usepackage{paracol}
+
+% Pływające obrazki
+\usepackage{float}
+\usepackage{svg}
+\usepackage{graphicx}
+
+% table of contents refs
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{booktabs}
+\usepackage{listings}
+
+
+\SendSettingsToPgf
+\title{\bf Sprawozdanie z bloku drugiego \vskip 0.1cm}
+\author{Konrad Winnicki \\ Jakub Sikora}
+\date{\today}
+\pgfplotsset{compat=1.15}	
+\begin{document}
+
+\makeatletter
+\renewcommand{\maketitle}{\begin{titlepage}
+		\begin{center}{
+				\LARGE {\bf Politechnika Warszawska}}\\
+            \vspace{0.4cm}
+            \leftskip-0.9cm
+            {\LARGE {\bf \mbox{Wydział Elektroniki i Technik Informacyjnych}}}\\
+            \vspace{0.2cm}
+            {\LARGE {\bf \mbox{Instytut Automatyki i Informatyki Stosowanej}}}\\
+            
+            \vspace{5cm}
+            \leftskip-0.5cm
+			{\bf \Huge \mbox{Sterowanie i symulacja robotów} \vskip 0.1cm}
+		\end{center}
+		\vspace{0.1cm}
+
+		\begin{center}
+			{\bf \LARGE \@title}
+		\end{center}
+
+		\vspace{10cm}
+		\begin{paracol}{2}
+			\addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
+			\subsection*{Zespół:}
+			\bf{ \Large{ \noindent\@author \par}}
+			\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
+
+			\switchcolumn \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
+			\subsection*{Prowadzący:}
+			\bf{\Large{\noindent mgr. inż. Wojciech \\ Dudek}}
+			\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
+
+		\end{paracol}
+		\vspace*{\stretch{6}}
+		\begin{center}
+			\bf{\large{Warszawa, \@date\vskip 0.1cm}}
+		\end{center}
+	\end{titlepage}
+}
+\makeatother
+\maketitle
+
+\tableofcontents
+
+\chapter{Laboratorium 1}
+
+\section{Znalezione błędy w funkcjonowaniu systemu robota}
+
+\section{Opis algorytmu interpolacji liniowej}
+
+\subsection{Interpolacja na podstawie zadawanych prędkości}
+
+\subsection{Interpolacja na podstawie danych odometrii}
+
+
+\chapter{Projekt 1}
+
+\section{Struktura oprogramowania stworzonego do zbierania danych}
+Diagram strukturalny (zawiera węzły/procesy składowe systemu oraz komunikację między
+nimi)
+\section{Opis działania węzła zbierającego dane}
+Opis z diagramami
+\section{Opis działania węzła sterującego robota}
+Opis z diagramami
+\section{Sposób analizy danych}
+
+\section{Wykresy i wnioski}
+
+
+\chapter{Laboratorium 2}
+
+\section{Stworzone środowisko i jego mapa}
+
+\section{Przykładowe ścieżki zaplanowane w środowiskach}
+
+\section{Pliki uruchomieniowe symulacji}
+
+
+\chapter{Projekt 2}
+
+\section{Struktura sterownika robota}
+
+\section{Opis działania węzła planującego}
+
+\section{Pliki konfiguracyjne map kosztów oraz lokalnego planera}
+
+\section{Wyjaśnienie zastosowanych parametrów}
+Dlaczego taki parametr ustawiono i dlaczego taka wartość?
+\section{Weryfikacja działania}
+Zrzuty ekranu z zaplanowaną i wykonaną ścieżką (Typ
+wizualizacji: Odometry ): http://wiki.ros.org/rviz/DisplayTypes/Odometry
+\end{document}
