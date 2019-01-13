@@ -5,6 +5,7 @@ import numpy as np
 import PyKDL
 import math
 import tf
+import sys
 
 from geometry_msgs.msg import PoseStamped, Twist, PoseWithCovariance, Pose2D, Point
 from turtlesim.msg import Pose
@@ -14,6 +15,7 @@ from stero_mobile_init.srv import STPT
 
 global map_pose
 global x_robot, y_robot, theta_robot
+global srv_name
 
 def tf_callback(pose):
     global map_pose
@@ -46,16 +48,19 @@ def create_start():
     return ps
 
 def do_path_step(pose):
+    global srv_name
     point = Pose()
-    go_to_stpt = rospy.ServiceProxy('stero/go_to_stpt', STPT)
+    go_to_stpt = rospy.ServiceProxy(srv_name, STPT)
     point.x = pose.pose.position.x
     point.y = pose.pose.position.y
     [x,y,z,w] = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
     [roll,pitch,yaw] = PyKDL.Rotation.Quaternion(x,y,z,w).GetRot()
     point.theta = yaw
     print("x: {0}, y: {1}, theta: {2}".format(point.x, point.y, point.theta))
-    print("return code: {0}".format(go_to_stpt(point)))
+    result = go_to_stpt(point)
+    print("return code: {0}".format(result))
     print("--------------")   
+    return result
    
 def create_goal(x,y):
     goal = PoseStamped()
@@ -88,8 +93,8 @@ def plan_goal(stpt):
     n=__path_step__
     while n<lenPoses:
         print("stpt {0}: ".format(n))
-        do_path_step(poses[n])
-        n = n + 30
+        result = do_path_step(poses[n])
+        n = n + 40
     print("stpt {0}: ".format(lenPoses-1))
     do_path_step(poses[lenPoses-1])
     print("### FINISH ###")
@@ -102,8 +107,12 @@ if __name__ == "__main__":
     #rospy.Subscriber('/elektron/mobile_base_controller/odom', Odometry, odometry_callback)
     print("waiting for /global_planner/planner/make_plan service")
     rospy.wait_for_service('/global_planner/planner/make_plan')
-    print("waiting for stero/go_to_stpt service")
-    rospy.wait_for_service('stero/go_to_stpt')
+    srv_name = 'stero/go_to_stpt'
+    if len(sys.argv) > 1 and sys.argv[1]=="local_planner_active":
+        srv_name = 'stero/plan_local_stpt'
+    print("waiting for {0} service".format(srv_name))
+    rospy.wait_for_service(srv_name)
+
     print("OK, let's go!")
     rospy.spin()  
    
