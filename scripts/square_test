@@ -1,0 +1,11 @@
+CW:
+rostopic pub /new_pose turtlesim/Pose '{x: 2.0, y: 0.0, theta: 1.583}'
+rostopic pub /new_pose turtlesim/Pose '{x: 2.0, y: 2.0, theta: -3.131}'
+rostopic pub /new_pose turtlesim/Pose '{x: 0.0, y: 2.0, theta: -1.562}'
+rostopic pub /new_pose turtlesim/Pose '{x: 0.0, y: 0.0, theta: 0}'
+
+CCW:
+rostopic pub /new_pose turtlesim/Pose '{x: 0.0, y: 2.0, theta: 0}'
+rostopic pub /new_pose turtlesim/Pose '{x: 2.0, y: 2.0, theta: -1.562}'
+rostopic pub /new_pose turtlesim/Pose '{x: 2.0, y: 0.0, theta: -3.131}'
+rostopic pub /new_pose turtlesim/Pose '{x: 2.0, y: 0.0, theta: 1.583}'
