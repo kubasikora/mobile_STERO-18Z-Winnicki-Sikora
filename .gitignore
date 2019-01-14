@@ -1,1 +1,2 @@
-RCPRG_rosinstall/*
+RCPRG_rosinstall/
+*.vscode
