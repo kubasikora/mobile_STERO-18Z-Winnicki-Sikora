@@ -13,6 +13,7 @@ find_package(  catkin   REQUIRED
   global_planner
   base_local_planner
   rotate_recovery
+  dwa_local_planner
 )
 
 add_service_files(
