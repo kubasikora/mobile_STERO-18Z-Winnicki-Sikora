@@ -21,7 +21,7 @@ if __name__ == "__main__":
         point.theta =  float(sys.argv[3])
         #print("x: {0}, y: {1}, theta: {2}".format(point.x, point.y, point.theta))
         result = go_to_stpt(point)
-        print("return code: {0}".format(result))
+        print("returned: {0}\n\r".format(result))
         print("--------------")   
     else:
         print("Usage: posicionador <x> <y> <theta>\n\r");

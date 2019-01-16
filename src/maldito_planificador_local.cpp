@@ -41,8 +41,6 @@ ros::Publisher pub_cmd_vel;
 ros::ServiceServer stpt_srv;
 //ros::Subscriber sub_odom;
 
-bool inProgress = false;
-bool doCancel = false;
 
 
 
@@ -63,10 +61,10 @@ bool stpt_service_callback(stero_mobile_init::STPT::Request  &req, stero_mobile_
 void odom_callback(const nav_msgs::Odometry::ConstPtr&  msg);
 
 /*
-* planowanie ruchu ze startu do setpoint
+* planowanie ruchu do setpoint
 *
 */
-int32_t planMove( geometry_msgs::PoseStamped &start, geometry_msgs::PoseStamped &stpt );
+string planMove( geometry_msgs::PoseStamped &stpt, bool &doCancel );
 
 
 
@@ -125,13 +123,19 @@ int main(int argc, char *argv[])
 bool stpt_service_callback(stero_mobile_init::STPT::Request  &req, stero_mobile_init::STPT::Response &res)
 {
     tf2::Quaternion quat;
-    geometry_msgs::PoseStamped start, stpt;
+    geometry_msgs::PoseStamped stpt;
+    static bool inProgress = false;
+    static bool doCancel = false;
+    ros::Rate ros_rate(10);
+
     cout<<"stpt service server callback\n\r";
     cout<<"STPT: x="<<req.pose.x<<"; y="<<req.pose.y<<"; theta="<<req.pose.theta<<";\n\r";
 
+
     // gdy w trakcie trwania obsługi pojawi się kolejne, anuluj pierwsze    
     doCancel = true;
-    while(inProgress);
+    while(inProgress)
+        ros_rate.sleep();
     inProgress = true;
     doCancel = false;
 
@@ -145,26 +149,14 @@ bool stpt_service_callback(stero_mobile_init::STPT::Request  &req, stero_mobile_
     stpt.pose.orientation.y = quat.getY();
     stpt.pose.orientation.z = quat.getZ();
     stpt.pose.orientation.w = quat.getW();
-    start.header.frame_id = "map";
-    start.header.stamp = ros::Time(0);
 
     try
     {
-        // pobranie pozycji robota
-        if( !costmap_global->getRobotPose(start) )
-        {
-            res.result = -1;
-            inProgress = false;
-            return true;
-        }
-
-        cout<<"pose: x="<<start.pose.position.x<<"; y="<<start.pose.position.y<<"; theta=---"<<";\n\r";
-
-        res.result = planMove(start, stpt);
+        res.result = planMove(stpt, doCancel);
     }
     catch(...)
     {
-        cout << "Exception occurred";
+        res.result = "Exception occurred";
     }
 
     inProgress = false;
@@ -184,11 +176,71 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr&  msg)
     
 }
 
-int32_t planMove( geometry_msgs::PoseStamped &start, geometry_msgs::PoseStamped &stpt )
+string planMove( geometry_msgs::PoseStamped &stpt, bool& doCancel )
 {
+    bool finish = false, noPlan = false;
+    ros::Rate ros_rate(10);
+    vector<geometry_msgs::PoseStamped> path;
+    geometry_msgs::Twist twist;
+    geometry_msgs::PoseStamped pose;
+    geometry_msgs::PoseStamped start;
+    start.header.frame_id = "map";
+    start.header.stamp = ros::Time(0);
+    pose.header.frame_id = "map";
+    pose.header.stamp = ros::Time(0);
+        
+    // pobranie pozycji robota
+    if( !costmap_global->getRobotPose(start) )
+        return "costmap_global.getRobotPose() failed";
+    // plan globalny
+    if( !global_planner_->makePlan(start, stpt, path) )
+        return "global_planner_.makePlan() failed";
+    // przekazanie planu globalnego do planera lokalnego
+    if( !local_planner->setPlan(path) )
+        return "local_planner.setPlan() failed";
+    // 
+    global_planner_->publishPlan(path);
 
+
+    cout<<"pose: x="<<start.pose.position.x<<"; y="<<start.pose.position.y<<"; theta=---"<<";\n\r";
+
+    while( ros::ok() && !(doCancel) )
+    {
+        if( local_planner->isGoalReached() )
+        {
+            finish = true;
+            break;
+        }
+        // wyznaczenie kolejnej prędkości
+        if( !local_planner->computeVelocityCommands(twist) )
+        {
+            // nie wyznaczono kolejnej prędkości
+            noPlan = true;
+            break;
+        }
+        
+        // opublikowanie nowego polecenia prędkosci
+        pub_cmd_vel.publish(twist);
+        // chwila dla rosa, niech ma
+        ros::spinOnce();
+        ros_rate.sleep();
+    }
+
+    twist.linear.x = 0;
+    twist.linear.y = 0;
+    twist.linear.z = 0;
+    twist.angular.x = 0;
+    twist.angular.y = 0;
+    twist.angular.z = 0;
+    // robot STOP
+    pub_cmd_vel.publish(twist);
+
+    if(noPlan)
+        return "no local plan found";
+    if(finish)
+        return "goal reached";
     if(doCancel)
-        return -10;
+        return "doCancel action performed";
 
-    return 0;
+    return "OK!";
 }
