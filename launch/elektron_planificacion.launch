@@ -52,13 +52,14 @@
   <!--<node name="stero_odometria_movimiento" pkg="stero_mobile_init" type="odometria_movimiento.py" />-->
 
 	<node name="maldito_planificador_local" pkg="stero_mobile_init" type="maldito_planificador_local" output="screen">
-		<rosparam file="$(find stero_mobile_init)/params/global_mapa_de_costos.yaml" command="load" ns="costmap" />
-		<rosparam file="$(find stero_mobile_init)/params/local_mapa_de_costos.yaml" command="load" ns="local_costmap" />
-		<rosparam file="$(find stero_mobile_init)/params/global_planificador.yaml" command="load" ns="elektron_global_planner" />
-		<rosparam file="$(find stero_mobile_init)/params/local_planificador.yaml" command="load" ns="elektron_local_planner" />
-		<remap from="odom" to="elektron/mobile_base_controller/odom"/>
+		<rosparam file="$(find stero_mobile_init)/params/global_mapa_de_costos.yaml" command="load" ns="global_mapa_de_costos" />
+		<rosparam file="$(find stero_mobile_init)/params/local_mapa_de_costos.yaml" command="load" ns="local_mapa_de_costos" />
+		<rosparam file="$(find stero_mobile_init)/params/global_planificador.yaml" command="load" ns="global_planificador" />
+		<rosparam file="$(find stero_mobile_init)/params/local_planificador.yaml" command="load" ns="local_planificador" />
+    <remap from="odom" to="elektron/mobile_base_controller/odom"/>
 		<remap from="cmd_vel" to="/mux_vel_raw/cmd_vel"/>
 		<remap from="scan" to="laser_scan"/>
 	</node>
-	
+
 </launch>
+

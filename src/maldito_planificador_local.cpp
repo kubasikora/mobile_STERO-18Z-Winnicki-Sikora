@@ -9,7 +9,10 @@
 #include "stero_mobile_init/STPT.h"
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/Twist.h"
+#include "geometry_msgs/Quaternion.h"
 #include <tf2/LinearMath/Quaternion.h>
+#include <rotate_recovery/rotate_recovery.h>
+#include <cmath>
 
 using namespace std;
 
@@ -41,6 +44,9 @@ ros::Publisher pub_cmd_vel;
 ros::ServiceServer stpt_srv;
 //ros::Subscriber sub_odom;
 
+// rotate recovery
+//rotate_recovery::RotateRecovery* rotateRecovery;
+
 
 
 
@@ -66,8 +72,17 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr&  msg);
 */
 string planMove( geometry_msgs::PoseStamped &stpt, bool &doCancel );
 
+/*
+*
+*
+*/
+void myRotateBehavior();
 
-
+/*
+*
+*
+*/
+double thetaFromQuat(geometry_msgs::Quaternion &orientation);
 
 
 
@@ -87,6 +102,7 @@ int main(int argc, char *argv[])
     // Planer globalny
     globalBuffer = new tf2_ros::Buffer(ros::Duration(10),true); 
     tf_global = new tf2_ros::TransformListener(*globalBuffer); // bez transformera tf czuje się samotny :(
+    //tf_global->waitForTransform("/map", "/base_link", ros::Time::now(), ros::Duration(3.0));
     costmap_global = new costmap_2d::Costmap2DROS("global_mapa_de_costos", *globalBuffer);
     costmap_global->start();
     global_planner_ = new global_planner::GlobalPlanner("global_planificador", costmap_global->getCostmap(), "map");
@@ -97,7 +113,24 @@ int main(int argc, char *argv[])
     costmap_local = new costmap_2d::Costmap2DROS("local_mapa_de_costos", *localBuffer);
     local_planner = new dwa_local_planner::DWAPlannerROS();
     local_planner->initialize("local_planificador", localBuffer, costmap_local);
-
+/*
+//footprint: [[-0.25, -0.18], [0.25, -0.18], [0.25, 0.18], [-0.25, 0.18]]
+    vector<geometry_msgs::Point> footprint(4);
+    geometry_msgs::Point point;
+    point.x = -0.25;
+    point.y = -0.18;
+    footprint.push_back(point);
+    point.x = 0.25;
+    point.y = -0.18;
+    footprint.push_back(point);
+    point.x = -0.25;
+    point.y = 0.18;
+    footprint.push_back(point);
+    point.x = -0.25;
+    point.y = 0.18;
+    footprint.push_back(point);
+    costmap_local->setUnpaddedRobotFootprint(footprint);
+*/
     // Serwer serwisu pozycji zadanej robota
     stpt_srv = nodeHandle.advertiseService("stero/go_to_stpt", stpt_service_callback);
     // Publisher poleceń prędkości robota
@@ -105,10 +138,13 @@ int main(int argc, char *argv[])
 	// Subscriber danych z odometrii
 	//sub_odom = nodeHandle.subscribe("/elektron/mobile_base_controller/odom", 10, odom_callback);
     
+    //rotateRecovery = new rotate_recovery::RotateRecovery();
+    //rotateRecovery->initialize("comportamiento_correctivo", localBuffer, costmap_global, costmap_local);
 
     cout<<"Maldito planificador local laboral\n\r";
 	ros::spin();
 
+    //delete rotateRecovery;
     delete local_planner;
     delete costmap_local;
     delete tf_local;
@@ -179,6 +215,7 @@ void odom_callback(const nav_msgs::Odometry::ConstPtr&  msg)
 string planMove( geometry_msgs::PoseStamped &stpt, bool& doCancel )
 {
     bool finish = false, noPlan = false;
+    int noPlanCount = 0;
     ros::Rate ros_rate(10);
     vector<geometry_msgs::PoseStamped> path;
     geometry_msgs::Twist twist;
@@ -202,22 +239,46 @@ string planMove( geometry_msgs::PoseStamped &stpt, bool& doCancel )
     global_planner_->publishPlan(path);
 
 
-    cout<<"pose: x="<<start.pose.position.x<<"; y="<<start.pose.position.y<<"; theta=---"<<";\n\r";
+    cout<<"pose: x="<<start.pose.position.x<<"; y="<<start.pose.position.y<<"; theta="<<thetaFromQuat(start.pose.orientation)<<";\n\r";
 
     while( ros::ok() && !(doCancel) )
     {
         if( local_planner->isGoalReached() )
         {
+            cout<<"goal reached\n\r";
             finish = true;
             break;
         }
         // wyznaczenie kolejnej prędkości
         if( !local_planner->computeVelocityCommands(twist) )
         {
-            // nie wyznaczono kolejnej prędkości
-            noPlan = true;
-            break;
+            // nie wyznaczono kolejnej prędkości, próba naprawy sytuacji
+            cout<<"local plan not found, trying exec some recovery behaviours\n\r";
+            noPlanCount++;
+            switch(noPlanCount)
+            {
+                case 1:
+                    cout<<"clear local costmap and run rotateRecovery behavior\n\r";
+                    //costmap_local->resetLayers();
+                    //rotateRecovery->runBehavior();
+                    //myRotateBehavior();
+                    ros::spinOnce();
+                    continue;
+                break;
+                //case 2:
+
+                //break;
+                default:
+                    cout<<"failed to recovery. abort mission!\n\r";
+                noPlan = true;
+
+            };
+
+            if(noPlan)
+                break;
         }
+        else
+            noPlanCount = 0;
         
         // opublikowanie nowego polecenia prędkosci
         pub_cmd_vel.publish(twist);
@@ -243,4 +304,62 @@ string planMove( geometry_msgs::PoseStamped &stpt, bool& doCancel )
         return "doCancel action performed";
 
     return "OK!";
+}
+
+void myRotateBehavior()
+{
+    geometry_msgs::Twist twist;
+    ros::Rate ros_rate(10);
+    double startTheta;
+    geometry_msgs::PoseStamped start;
+    start.header.frame_id = "map";
+    start.header.stamp = ros::Time(0);
+        
+    twist.linear.x = 0;
+    twist.linear.y = 0;
+    twist.linear.z = 0;
+    twist.angular.x = 0;
+    twist.angular.y = 0;
+    twist.angular.z = 0;
+
+    // pobranie pozycji robota
+    if( !costmap_global->getRobotPose(start) )
+    {
+        cout<<"myRotateBehavior(): costmap_global.getRobotPose() failed\n\r";
+        return;
+    }
+
+    startTheta = thetaFromQuat(start.pose.orientation);
+    twist.angular.z = 0.2;
+    for(int n=0; n<15; n++)
+    {
+        pub_cmd_vel.publish(twist);
+        ros::spinOnce();
+        ros_rate.sleep();
+    }
+    do
+    {
+        // pobranie pozycji robota
+        if( !costmap_global->getRobotPose(start) )
+        {
+            cout<<"myRotateBehavior(): costmap_global.getRobotPose() failed\n\r";
+            return;
+        }
+        pub_cmd_vel.publish(twist);
+        ros::spinOnce();
+        ros_rate.sleep();
+    }
+    while( 0.01 < fabs( startTheta-thetaFromQuat(start.pose.orientation) ) );
+
+    twist.angular.z = 0.0;
+    pub_cmd_vel.publish(twist);
+}
+
+double thetaFromQuat(geometry_msgs::Quaternion &orientation)
+{
+    double roll, pitch, yaw;
+    tf2::Quaternion quat( orientation.x, orientation.y, orientation.z, orientation.w );
+    tf2::Matrix3x3 matrix(quat);
+    matrix.getRPY(roll, pitch, yaw);
+    return yaw;
 }
