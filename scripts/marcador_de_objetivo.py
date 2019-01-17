@@ -62,11 +62,17 @@ def do_path_step(pose):
     print("--------------")   
     return result
    
-def create_goal(x,y):
+def create_goal(x,y, theta):
     goal = PoseStamped()
     goal.header.frame_id="map"
     goal.pose.position.x = x
     goal.pose.position.y = y
+    quaternion = tf.transformations.quaternion_from_euler(0,0,theta)
+    goal.pose.orientation.x = quaternion[0]
+    goal.pose.orientation.y = quaternion[1]
+    goal.pose.orientation.z = quaternion[2]
+    goal.pose.orientation.w = quaternion[3]
+    
     return goal
   
 def plan_goal(stpt):
@@ -77,12 +83,12 @@ def plan_goal(stpt):
     go_to_stpt = rospy.ServiceProxy('stero/go_to_stpt', STPT)
     
     start = create_start()
-    goal = create_goal(stpt.x, stpt.y)
+    goal = create_goal(stpt.x, stpt.y, stpt.theta)
     
     print("### START ###")
     print(start.pose.position)
     print("### GOAL ###")
-    print(goal.pose.position)
+    print(goal.pose)
     poses = make_plan(start, goal, 0.1).plan.poses
     lenPoses = len(poses)
     if lenPoses==0:
@@ -103,7 +109,7 @@ if __name__ == "__main__":
     rospy.init_node('marcador_de_objetivo', anonymous=False)
   
     robot_vel_pub = rospy.Publisher('mux_vel_nav/cmd_vel', Twist, queue_size = 10)
-    rospy.Subscriber('/stero/set_goal', Point, plan_goal)
+    rospy.Subscriber('stero/set_goal', Pose, plan_goal)
     #rospy.Subscriber('/elektron/mobile_base_controller/odom', Odometry, odometry_callback)
     print("waiting for /global_planner/planner/make_plan service")
     rospy.wait_for_service('/global_planner/planner/make_plan')
