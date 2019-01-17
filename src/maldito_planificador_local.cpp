@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     //rotateRecovery = new rotate_recovery::RotateRecovery();
     //rotateRecovery->initialize("comportamiento_correctivo", localBuffer, costmap_global, costmap_local);
 
-    cout<<"Maldito planificador local laboral\n\r";
+    cout<<"Maldito planificador local le gustan los ninos pequenos\n\r";
 	ros::spin();
 
     //delete rotateRecovery;
@@ -259,15 +259,27 @@ string planMove( geometry_msgs::PoseStamped &stpt, bool& doCancel )
             {
                 case 1:
                     cout<<"clear local costmap and run rotateRecovery behavior\n\r";
-                    //costmap_local->resetLayers();
+                    costmap_local->resetLayers();
                     //rotateRecovery->runBehavior();
-                    //myRotateBehavior();
+                    myRotateBehavior();
                     ros::spinOnce();
                     continue;
                 break;
-                //case 2:
+                case 2:
+                                         
+                    // pobranie pozycji robota
+                    if( !costmap_global->getRobotPose(start) )
+                        return "costmap_global.getRobotPose() failed";
+                    // plan globalny
+                    if( !global_planner_->makePlan(start, stpt, path) )
+                        return "global_planner_.makePlan() failed";
+                    // przekazanie planu globalnego do planera lokalnego
+                    if( !local_planner->setPlan(path) )
+                        return "local_planner.setPlan() failed";
+                    // 
+                    global_planner_->publishPlan(path);
 
-                //break;
+                break;
                 default:
                     cout<<"failed to recovery. abort mission!\n\r";
                 noPlan = true;

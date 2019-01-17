@@ -57,7 +57,7 @@ inflation_layer:
     enabled: true
 # enable layer
 # The radius in meters to which the map inflates obstacle cost values.
-    inflation_radius: 0.35
+    inflation_radius: 0.07
 # A scaling factor to apply to cost values during inflation.
     cost_scaling_factor: 6.0
 # #Kondziu: maybe set to false?

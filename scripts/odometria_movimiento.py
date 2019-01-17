@@ -40,7 +40,7 @@ def odometry_callback(odom):
 
 def stpt_service(stpt):
     pose_callback(stpt.pose)
-    return 0
+    return "OK"
 
 def pose_callback(pose):
     global x_robot, y_robot, theta_robot
