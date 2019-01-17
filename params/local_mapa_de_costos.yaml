@@ -47,7 +47,7 @@ obstacle_layer:
         clearing: true
 # if true, each pixel has one of 3 states: lethal obstacle, free, or unknown.
 # #Kondziu: maybe set to false?
-    track_unknown_space: true
+    track_unknown_space: false
 # end
 
 

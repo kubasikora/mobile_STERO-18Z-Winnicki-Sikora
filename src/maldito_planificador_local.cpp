@@ -266,7 +266,8 @@ string planMove( geometry_msgs::PoseStamped &stpt, bool& doCancel )
                     continue;
                 break;
                 case 2:
-                                         
+                              
+                    start.header.stamp = ros::Time(0);              
                     // pobranie pozycji robota
                     if( !costmap_global->getRobotPose(start) )
                         return "costmap_global.getRobotPose() failed";
